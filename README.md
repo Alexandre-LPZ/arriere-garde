@@ -1,5 +1,7 @@
 # Arrière-Garde — la porte de sécurité avant la mise en ligne
 
+*Français ci-dessous · [English version](#arrière-garde--the-security-gate-before-going-live)*
+
 **Avant-Garde** cadre un projet *avant* d'écrire du code. **Arrière-Garde** le vérifie *avant* de le
 mettre en ligne. Fait pour les débutants et les vibe-codeurs — et pour l'assistant IA qui les
 accompagne, afin qu'il ait un cadre de contrôle au lieu de dire « c'est sécurisé » sans preuve.
@@ -48,3 +50,56 @@ la faute de Supabase, c'est la mienne ». Strix est un projet indépendant (UseS
 Arrière-Garde ne le redistribue pas, il l'encadre.
 
 Licence MIT. Fait avec Claude (le Pilote) dans l'équipe Trinity OASIS.
+
+---
+
+# Arrière-Garde — the security gate before going live
+
+**Avant-Garde** frames a project *before* any code is written. **Arrière-Garde** checks it *before*
+it goes live. Built for beginners and vibe coders — and for the AI assistant working with them, so
+that it has a control frame instead of saying "it's secure" without proof. The plugin's working
+language is French (checklists, explanations); this section tells English readers what it does.
+
+## Three stages
+| Stage | What | Cost | Tool |
+|---|---|---|---|
+| **1. Static pre-flight** | the five vibe-coder mistakes: secret in code/git, server key on the client side, Supabase table without RLS, permission column editable by its owner, deployment config without security headers | free, 5 min, no network | `scripts/preflight.mjs` |
+| **2. Senior review** | senior-level checklist in 8 areas (sessions, authorisation, inputs, secrets, dependencies, logs, GDPR, manual Supabase test) — each line OK / Fix / Not tested | free, 20–40 min | `references/revue-senior.md` |
+| **3. Authorised penetration test** | [Strix](https://github.com/usestrix/strix) (Apache 2.0) against a target you **own and that is not production**, after an estimate and a human GO | cents to a few euros of tokens | `scripts/devis-strix.mjs` |
+
+## Founding rules
+1. Never "secure" without a test that failed to get in; always the list of what was not tested.
+2. Only test what you own (or have written permission for). Never production.
+3. Estimate before spending; the GO is human (the `.cockpit_go` token of the
+   [ultracode-cockpit](https://github.com/Alexandre-LPZ/garde-fous) plugin, or `ARRIERE_GARDE_GO=1`
+   set by the human); the assistant never creates it.
+4. Every finding is explained in plain language (`references/pedagogie.md`).
+
+## Install
+- **Claude account (chat, Cowork, and Claude Code through sync)**: import `arriere-garde/SKILL.md`
+  via Customize → Skills (the doctrine + checklists). Scripts run wherever Node is available.
+- **Claude Code, per project**: copy the `arriere-garde/` folder into `.claude/skills/`.
+- Stage 3: Docker running, `pip install strix-agent`, `LLM_API_KEY` + `STRIX_LLM` set by the human
+  (cheaper model via `LLM_API_BASE`, `STRIX_REASONING_EFFORT=medium`).
+
+## Minimal use
+```bash
+node arriere-garde/scripts/preflight.mjs .                          # stage 1
+# stage 2: walk through references/revue-senior.md with the human
+node arriere-garde/scripts/devis-strix.mjs --target http://localhost:3000 --owner "local pre-prod of project X"   # stage 3, estimate then GO
+```
+
+## Test bench (16 Nov 2026)
+- `preflight.mjs` on a deliberately faulty project (OpenAI secret in code, committed `.env` with
+  `NEXT_PUBLIC_STRIPE_SECRET_KEY`, `orders` table without RLS, `profiles.is_admin` editable by its
+  owner, CORS `*`, no headers): **5 FAIL · 5 WARN**, all expected, each with a fix and a plain-language
+  sentence. On a clean project: **0 · 0 · 0**, no false positive.
+- `devis-strix.mjs`: 5 barriers tested — no ownership statement → STOP; public domain → STOP
+  "production"; local without GO → estimate then STOP; declared pre-prod → estimate; GO without key → STOP.
+
+## Credits
+Inspired by the community guide on Strix and by a data developer's account of a first SaaS
+compromised through an `is_admin` column editable under RLS — "not Supabase's fault, mine". Strix is
+an independent project (UseStrix, Apache 2.0); Arrière-Garde does not redistribute it, it frames it.
+
+MIT license. Made with Claude (the Pilot) in the Trinity OASIS team.
